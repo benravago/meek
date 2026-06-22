@@ -28,7 +28,6 @@ public static class Parser implements Rule {
 <accept>
   boolean accept() {
     var p = pop();
-    p.success = true;
     p.rhs.clear();
     current.end = pos;
     current.rhs.add(p);
@@ -39,7 +38,6 @@ public static class Parser implements Rule {
 <acceptInner>
   boolean acceptInner() {
     var p = pop();
-    p.success = true;
     current.end = pos;
     current.rhs.addAll(p.rhs);
     current.hwmUpdFrom(p);
@@ -51,7 +49,6 @@ public static class Parser implements Rule {
     var p = pop();
     pos = p.start;
     p.end = pos;
-    p.success = true;
     p.rhs = null;
     p.hwmClear();
     current.end = pos;
@@ -62,7 +59,6 @@ public static class Parser implements Rule {
     var p = pop();
     pos = p.start;
     p.end = pos;
-    p.success = false;
     p.rhs = null;
     if (pos < p.hwm) {
       // no-op
@@ -80,7 +76,6 @@ public static class Parser implements Rule {
     var p = pop();
     pos = p.start;
     p.end = pos;
-    p.success = false;
     p.rhs = null;
     current.end = pos;
     current.hwmUpdFrom(p);
@@ -91,7 +86,6 @@ public static class Parser implements Rule {
     var p = pop();
     pos = p.start;
     p.end = pos;
-    p.success = false;
     p.rhs = null;
     p.hwmSet(p.diag, pos);
     current.end = pos;
@@ -106,7 +100,7 @@ public static class Parser implements Rule {
     }
     var saveend = pos;
     var p = current;
-    current = new Phrase("dummy", "dummy", pos, source);
+    current = new Phrase("dummy", "dummy", pos);
     pos = savestart;
     endpos = saveend;
     var match = b.getAsBoolean() && pos == endpos;
@@ -239,7 +233,7 @@ public static class Parser implements Rule {
       if ($P.semAct == null) {
         return p;
       } else {
-        push(new Phrase($P.diag, $P.diag, p.getFirst().start, source));
+        push(new Phrase($P.diag, $P.diag, p.getFirst().start));
         current.rhs = p;
         current.end = p.getLast().end;
         $P.semAct.run();
@@ -266,7 +260,7 @@ public static class Parser implements Rule {
   }
 <consume>
   boolean consume(int n) {
-    var p = new Phrase("", "", pos, source);
+    var p = new Phrase("", "", pos);
     pos += n;
     p.end = pos;
     current.rhs.add(p);
@@ -280,7 +274,7 @@ public static class Parser implements Rule {
   }
 <begin>
   void begin(String name, String diag) {
-    push(new Phrase(name, diag, pos, source));
+    push(new Phrase(name, diag, pos));
   }
   void begin(String name) {
     begin(name, name);
@@ -303,7 +297,7 @@ public static class Parser implements Rule {
   void init() {
     pos = 0;
     endpos = source.length();
-    current = new Phrase("", "", 0, source);
+    current = new Phrase("", "", 0);
     %2$s
     sem.rule = this;
     sem.init();
@@ -340,30 +334,28 @@ public interface Rule {
 }
 <Phrase>
 public static class Phrase {
-  CharSequence source;
   int start, end;
   String name, diag;
-  boolean success;
   List<Phrase> rhs = new ArrayList<>(10);
   Object value;
   Phrase parent;
   int hwm = -1;
   List<String> hwmExp = new ArrayList<>();
   List<Runnable> defAct = new ArrayList<>();
-  public Phrase(String n, String d, int s, CharSequence cs) {
-    name=n; diag=d; start=end=s; source=cs;
+  public Phrase(String n, String d, int s) {
+    name=n; diag=d; start=end=s;
   }
   public void put(Object o) { value = o; }
   public Object get() { return value; }
-  public CharSequence text() { return source.subSequence(start, end); }
-  public char charAt(int i) { return source.charAt(start + i); }
-  public boolean isEmpty() { return start == end; }
   public String rule() { return name; }
+  public boolean isEmpty() { return start == end; }
   public boolean isA(String rule) { return name.equals(rule); }
   public boolean isTerm() { return name.isEmpty(); }
-  public int offset(int i) { return start + i; }
-  public int errMark() { return hwm; }
-  public List<String> errMsgs() { return hwmExp; }
+  public List<Phrase> rhs() { return rhs; }
+  public int start() { return start; }
+  public int end() { return end; }
+  public List<String> tags() { return hwmExp; }
+  public int mark() { return hwm; }
   public void errClear() {
     hwmExp.clear();
     hwm = -2;

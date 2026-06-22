@@ -10,7 +10,7 @@ peg.jar: src/mouse/Main.java
 	$(JAR) cvf $@ -C bin mouse
 	$(JAR) uvf $@ -C src mouse/peg/grammar.template
 
-PEG.java: peg.jar
+bootstrap/PEG.java: peg.jar
 	$(JAVA) -cp $< bootstrap/Bootstrap.java < bootstrap/peg.peg > $@
 
 clean:

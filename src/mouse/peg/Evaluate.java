@@ -51,12 +51,12 @@ public class Evaluate { // was Mouse-2.3 PEG.java
   //  Parse PEG grammar supplied as 'src'.
   public boolean parse(CharSequence src) {
 
-    var sem = new Semantics();
+    var sem = new Semantics(src);
     var parser = new PEG.Parser();
     if (!parser.parse(src,sem)) {
       var current = parser.lhs();
-      if (current.errMark() >= 0) {
-        for (var e:current.errMsgs()) error(e);
+      if (current.mark() >= 0) {
+        for (var e:current.tags()) error(e);
       }
       return false; // Quit if parser failed.
     }

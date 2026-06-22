@@ -4,12 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import mouse.util.Text;
-
 import static mouse.util.Text.*;
 
 //  Semantics - for parsing the PEG source
 class Semantics extends PEG.Semantics {
 
+  Semantics(CharSequence cs) {
+    source = cs;
+  }
+  
+  CharSequence source;
+  
   //  Results: list of Rules and number of errors.
   List<Expr.Rule> rules;
   int errors;
@@ -90,8 +95,7 @@ class Semantics extends PEG.Semantics {
   //  Rule not recognized
   @Override
   protected void Error() {
-    // System.out.println(lhs().errMsg()); // TODO: maybe use 'StringBuilder errMsg' ??
-    lhs().errMsgs().forEach(Text::error);
+    lhs().tags().forEach(Text::error);  // TODO: fix this; replace with explain()
     lhs().errClear();
     errors++;
   }
@@ -307,7 +311,7 @@ class Semantics extends PEG.Semantics {
     for (var i = 1; i < rhsSize() - 2; i++) {
       sb.append(charValue(i));
     }
-    lhs().put(new Expr.CharClass(sb.toString(), rhs(0).charAt(0) == '^'));
+    lhs().put(new Expr.CharClass(sb.toString(), source.charAt(rhs(0).start()) == '^'));
   }
 
   //  Range = "[" Char "-" Char "]" Space
@@ -322,7 +326,7 @@ class Semantics extends PEG.Semantics {
   //  Char = ![\r\n]_
   @Override
   protected void Char() {
-    lhs().put(rhs(0).charAt(0));
+    lhs().put(source.charAt(rhs(0).start()));
   }
 
   //  Escape = "\\u" HexDigit HexDigit HexDigit HexDigit
@@ -358,7 +362,7 @@ class Semantics extends PEG.Semantics {
   //            0  1
   @Override
   protected void Escape() {
-    lhs().put(rhs(1).charAt(0));
+    lhs().put(source.charAt(rhs(1).start()));
   }
 
   //  Space = ([ \r\n\t] / Comment)*
